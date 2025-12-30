@@ -1,0 +1,22 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Player {
+  id              String   @id @unique
+  email           String   @unique
+  name            String?
+  preferredHand   String?
+  preferredSide   String?
+  profileImageUrl String?
+  createdAt       DateTime @default(now())
+}
+
