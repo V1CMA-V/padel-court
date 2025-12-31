@@ -1,6 +1,16 @@
-import { LoginForm } from "@/components/login-form"
+import { LoginForm } from '@/components/login-form'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/dist/client/components/navigation'
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const supabase = await createClient()
+
+  const { data } = await supabase.auth.getClaims()
+
+  if (data?.claims?.sub) {
+    redirect('/profile')
+  }
+
   return (
     <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="w-full max-w-sm">

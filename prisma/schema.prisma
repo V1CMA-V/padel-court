@@ -17,6 +17,227 @@ model Player {
   preferredHand   String?
   preferredSide   String?
   profileImageUrl String?
+  colorSchema     String?  @default("theme-orange")
   createdAt       DateTime @default(now())
+
+  teams           Team[]
+  TeamMembers     TeamMember[]
 }
 
+model Team {
+  id        String     @id @default(uuid())
+  status    String?    @default("ACTIVE")
+  createdAt DateTime   @default(now())
+
+  createdById String
+  createdBy   Player   @relation(fields: [createdById], references: [id])
+
+  members      TeamMember[]
+  enrollments  TeamEnrollment[]
+  matchTeams   MatchTeam[]
+  LeagueTeamStats LeagueTeamStats[]
+}
+
+enum TeamMemberRole {
+  OWNER
+  MEMBER
+}
+
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  teamId   String
+  playerId String?
+
+  guestName String?
+  role      TeamMemberRole
+
+  team   Team   @relation(fields: [teamId], references: [id])
+  player Player? @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+}
+
+
+
+model Club {
+  id          String   @id @unique
+  name        String   @unique
+  email       String   @unique
+  plan        String   @default("free")
+  colorSchema String?  @default("theme-orange")
+
+  phoneNumber String?
+  description String?
+  logoUrl     String?
+  sitioWeb    String?
+  aditionalServices String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courts      Court[]
+  locations   Location[]
+
+  tournaments Tournament[]
+  leagues     League[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+
+  clubId    String?  @unique
+  club      Club?     @relation(fields: [clubId], references: [id])
+
+  address   String
+  state     String
+  country   String
+  zipCode   String
+  googleMapsUrl String?
+
+  createdAt DateTime @default(now())
+}
+
+model Court {
+  id        String   @id @default(uuid())
+  name      String
+  isIndoor  Boolean  @default(true)
+  isAvailable Boolean  @default(true)
+
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id])
+  matches   Match[]
+
+  createdAt DateTime @default(now())
+}
+
+enum TournamentStatus {
+  DRAFT
+  OPEN
+  ONGOING
+  FINISHED
+  CANCELED
+}
+
+
+model Tournament {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      TournamentStatus
+  createdAt   DateTime @default(now())
+
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id])
+
+  categories Category[]
+  matches    Match[]
+  enrollments TeamEnrollment[]
+}
+
+model League {
+  id        String   @id @default(uuid())
+  name      String
+  season    String
+  createdAt DateTime @default(now())
+
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id])
+
+  teams   LeagueTeamStats[]
+  matches Match[]
+}
+
+model LeagueTeamStats {
+  id String @id @default(uuid())
+
+  leagueId String
+  teamId   String
+
+  matchesWon  Int @default(0)
+  matchesLost Int @default(0)
+  setsWon     Int @default(0)
+  setsLost    Int @default(0)
+
+  league League @relation(fields: [leagueId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([leagueId, teamId])
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+
+  tournaments Tournament[]
+  matches     Match[]
+  teamEnrollments TeamEnrollment[]
+}
+
+model TeamEnrollment {
+  id           String @id @default(uuid())
+  teamId       String
+  tournamentId String
+  categoryId   String
+
+  team       Team       @relation(fields: [teamId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  category   Category   @relation(fields: [categoryId], references: [id])
+
+  @@unique([teamId, tournamentId])
+}
+
+enum MatchRound {
+  GROUP
+  QF
+  SF
+  FINAL
+}
+
+
+model Match {
+  id        String    @id @default(uuid())
+  round     MatchRound
+  scheduled DateTime?
+  createdAt DateTime  @default(now())
+
+  categoryId String
+  courtId    String?
+
+  category Category @relation(fields: [categoryId], references: [id])
+  court    Court?    @relation(fields: [courtId], references: [id])
+
+  tournaments Tournament[]
+  leagues     League[]
+  teams  MatchTeam[]
+  result MatchResult?
+}
+
+model MatchTeam {
+  id       String @id @default(uuid())
+  position Int    // 1 o 2
+
+  matchId String
+  teamId  String
+
+  match Match @relation(fields: [matchId], references: [id])
+  team  Team  @relation(fields: [teamId], references: [id])
+
+  @@unique([matchId, teamId])
+  @@unique([matchId, position])
+}
+
+model MatchResult {
+  id        String   @id @default(uuid())
+  score     String
+  winner    Int      // position ganador: 1 o 2
+  createdAt DateTime @default(now())
+
+  matchId String @unique
+  match   Match  @relation(fields: [matchId], references: [id])
+}

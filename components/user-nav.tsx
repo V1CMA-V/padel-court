@@ -35,8 +35,6 @@ export default async function UserNav({ id }: { id: string }) {
     },
   })
 
-  console.log('UserNav user:', user)
-
   async function handleSignOut() {
     'use server'
 
