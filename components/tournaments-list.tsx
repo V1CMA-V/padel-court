@@ -13,6 +13,7 @@ type Tournament = {
   endDate: Date
   status: 'DRAFT' | 'OPEN' | 'ONGOING' | 'FINISHED' | 'CANCELED'
   capacity: number | null
+  slug: string
 }
 
 interface TournamentsListProps {

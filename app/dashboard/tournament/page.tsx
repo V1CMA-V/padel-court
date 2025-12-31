@@ -18,6 +18,10 @@ async function getData(userId: string) {
       endDate: true,
       status: true,
       capacity: true,
+      slug: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
     },
   })
 
