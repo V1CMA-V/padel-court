@@ -130,6 +130,8 @@ export default async function GestionarTorneoPage({
   console.log('Matches: ', matches)
   console.log('Categories: ', categories)
 
+  // TODO: Replace with real data from DB
+
   const equiposInscritos = [
     {
       id: 'team-1',

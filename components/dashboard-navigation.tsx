@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { TenisBall } from './icons'
+import { ModeToggle } from './mode-toggle'
 
 export function DashboardNavigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -68,6 +69,8 @@ export function DashboardNavigation() {
         </Link>
 
         <div className="ml-auto flex items-center gap-4">
+          <ModeToggle />
+
           <Button variant="ghost" size="sm" asChild>
             <Link href="/">Ver Sitio Público</Link>
           </Button>

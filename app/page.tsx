@@ -1,8 +1,12 @@
+import CTA from '@/components/cta'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import AboutSection from '@/sections/about'
+import FeaturesSection from '@/sections/features'
 import Footer from '@/sections/Footer'
 import Navbar from '@/sections/navbar'
 import TournamentPrincipalSection from '@/sections/tournament-principal'
-import { ArrowDown } from 'lucide-react'
+import { ArrowDown, ArrowRight, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Home() {
@@ -11,28 +15,45 @@ export default function Home() {
       <Navbar />
 
       <main className="min-h-screen flex flex-col">
-        <div className="h-dvh w-full flex items-center justify-center flex-col gap-6 px-4 text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-wide ">
-            Bienvenido a Cham<span className="text-primary">Pádel</span>
-          </h1>
-          <div className="mt-6 max-w-2xl text-center space-y-4 text-lg md:text-xl text-foreground">
-            <p>
-              Tu lugar para encontrar y reservar torneos de pádel fácilmente.
-              Además, descubre clubes y eventos cerca de ti.
+        <section className="container mx-auto px-4 py-20 md:py-32 h-dvh flex items-center flex-col justify-center text-center gap-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <Badge className="mb-4" variant="secondary">
+              <Zap className="mr-1 h-3 w-3" />
+              Gestión Profesional de Torneos
+            </Badge>
+            <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight md:text-6xl">
+              Organiza Torneos Pádel sin Complicaciones
+            </h1>
+            <p className="mb-8 text-pretty text-lg text-muted-foreground md:text-xl">
+              ChamPádel es la plataforma completa para clubes deportivos.
+              Gestiona inscripciones, calendarios, clasificaciones y mucho más
+              en un solo lugar.
             </p>
-            <p>Administrar torneos y eventos de tu club fácilmente.</p>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button size="lg" asChild>
+                <Link href="#contacto">
+                  Comenzar Prueba Gratis
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="#precios">Ver Precios</Link>
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-10 animate-bounce bg-accent/20 rounded-full p-2">
-            <Link href="#about" className="">
-              <ArrowDown className="w-8 h-8" />
-            </Link>
+          <div className="flex items-center justify-center w-fit p-2 animate-bounce bg-primary/10 rounded-full ">
+            <ArrowDown className="mx-auto h-8 w-8 text-primary" />
           </div>
-        </div>
+        </section>
 
         <AboutSection />
 
         <TournamentPrincipalSection />
+
+        <FeaturesSection />
+
+        <CTA />
       </main>
 
       <Footer />
