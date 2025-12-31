@@ -194,11 +194,23 @@ model Category {
   teamEnrollments TeamEnrollment[]
 }
 
+enum EnrollmentStatus {
+  PENDING
+  PAID
+  CANCELED
+  REJECTED
+  APPROVED
+}
+
 model TeamEnrollment {
   id           String @id @default(uuid())
   teamId       String
   tournamentId String
   categoryId   String
+
+  status      EnrollmentStatus @default(PENDING)
+
+  createdAt    DateTime @default(now())
 
   team       Team       @relation(fields: [teamId], references: [id])
   tournament Tournament @relation(fields: [tournamentId], references: [id])
@@ -214,11 +226,18 @@ enum MatchRound {
   FINAL
 }
 
+enum MatchStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELED
+}
 
 model Match {
   id        String    @id @default(uuid())
   round     MatchRound
   scheduled DateTime?
+  status    MatchStatus @default(SCHEDULED)
   createdAt DateTime  @default(now())
 
   categoryId String

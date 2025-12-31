@@ -1,6 +1,6 @@
 'use client'
 
-import { DoorClosed, Loader2 } from 'lucide-react'
+import { DoorClosed, Edit, Loader2 } from 'lucide-react'
 import { useFormStatus } from 'react-dom'
 import { Button } from './ui/button'
 
@@ -15,6 +15,24 @@ export function SubmitButton() {
       ) : (
         <Button className="w-full" type="submit">
           Guardar cambios
+        </Button>
+      )}
+    </>
+  )
+}
+
+export function SaveChangesButton() {
+  const { pending } = useFormStatus()
+  return (
+    <>
+      {pending ? (
+        <Button disabled className="w-fit">
+          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+        </Button>
+      ) : (
+        <Button className="w-fit" type="submit">
+          <Edit className="mr-2 h-4 w-4" />
+          Guardar Cambios
         </Button>
       )}
     </>

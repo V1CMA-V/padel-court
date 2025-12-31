@@ -1,5 +1,5 @@
-'use client'
-
+import { updateTournament } from '@/app/actions/tournament-actions'
+import InformationForm from '@/components/information-form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -35,91 +36,226 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  CalendarIcon,
-  Edit,
-  Plus,
-  Settings,
-  Trash2,
-  Trophy,
-  Users,
-} from 'lucide-react'
-import { useState } from 'react'
+import prisma from '@/lib/prisma'
+import { CalendarIcon, Edit, Plus, Trash2, Trophy, Users } from 'lucide-react'
 
-export default function GestionarTorneoPage({
+async function getData(tournamentSlug: string) {
+  const tournament = await prisma.tournament.findUnique({
+    where: {
+      slug: tournamentSlug,
+    },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+      capacity: true,
+      description: true,
+      format: true,
+      prize1st: true,
+      prize2nd: true,
+      prize3rd: true,
+      registrationFee: true,
+      rules: true,
+    },
+  })
+
+  const teamsInscribed = await prisma.teamEnrollment.findMany({
+    where: {
+      tournamentId: tournament?.id,
+    },
+    select: {
+      createdAt: true,
+
+      category: {
+        select: {
+          name: true,
+        },
+      },
+
+      teamId: true,
+      status: true,
+    },
+  })
+
+  const matches = await prisma.match.findMany({
+    where: {
+      tournamentId: tournament?.id,
+    },
+    select: {
+      category: {
+        select: {
+          name: true,
+        },
+      },
+
+      court: {
+        select: {
+          name: true,
+        },
+      },
+
+      round: true,
+      scheduled: true,
+      status: true,
+    },
+  })
+
+  const categories = await prisma.category.findMany({
+    where: {
+      tournamentId: tournament?.id,
+    },
+    select: {
+      name: true,
+    },
+  })
+
+  return { tournament, teamsInscribed, matches, categories }
+}
+
+export default async function GestionarTorneoPage({
   params,
 }: {
-  params: { id: string }
+  params: { slug: string }
 }) {
-  const [dialogoPartidoAbierto, setDialogoPartidoAbierto] = useState(false)
+  const { slug } = await params
 
-  const inscritos = [
+  const { tournament, teamsInscribed, matches, categories } = await getData(
+    slug
+  )
+
+  console.log('Tournament: ', tournament)
+  console.log('Teams Inscribed: ', teamsInscribed)
+  console.log('Matches: ', matches)
+  console.log('Categories: ', categories)
+
+  const equiposInscritos = [
     {
-      id: 1,
-      nombre: 'Carlos Rodríguez',
-      categoria: 'Individual',
-      estado: 'confirmado',
+      id: 'team-1',
+      teamName: 'Carlos Rodríguez',
+      players: [{ name: 'Carlos Rodríguez', email: 'carlos@email.com' }],
+      categoryName: 'Individual Masculino',
+      inscriptionStatus: 'paid',
+      inscriptionDate: '2025-03-10',
+      stripePaymentId: 'pi_123456',
     },
     {
-      id: 2,
-      nombre: 'Ana Martínez',
-      categoria: 'Individual',
-      estado: 'confirmado',
+      id: 'team-2',
+      teamName: 'Ana Martínez',
+      players: [{ name: 'Ana Martínez', email: 'ana@email.com' }],
+      categoryName: 'Individual Femenino',
+      inscriptionStatus: 'paid',
+      inscriptionDate: '2025-03-12',
+      stripePaymentId: 'pi_123457',
     },
     {
-      id: 3,
-      nombre: 'Juan Pérez & Luis García',
-      categoria: 'Dobles',
-      estado: 'pendiente',
-    },
-    {
-      id: 4,
-      nombre: 'María López',
-      categoria: 'Individual',
-      estado: 'confirmado',
+      id: 'team-3',
+      teamName: 'Juan Pérez & Luis García',
+      players: [
+        { name: 'Juan Pérez', email: 'juan@email.com' },
+        { name: 'Luis García', email: 'luis@email.com' },
+      ],
+      categoryName: 'Dobles Masculino',
+      inscriptionStatus: 'pending',
+      inscriptionDate: '2025-03-14',
+      stripePaymentId: null,
     },
   ]
 
   const partidos = [
     {
-      id: 1,
-      fecha: '2025-04-15',
-      hora: '10:00',
-      cancha: 'Pista 1',
-      jugador1: 'Carlos Rodríguez',
-      jugador2: 'Ana Martínez',
-      resultado: '',
-      estado: 'programado',
+      id: 'match-1',
+      scheduled: '2025-04-15T10:00:00',
+      round: 'QF',
+      courtId: 'court-1',
+      courtName: 'Pista 1 Central',
+      categoryName: 'Individual Masculino',
+      team1Id: 'team-1',
+      team1Name: 'Carlos Rodríguez',
+      team2Id: 'team-4',
+      team2Name: 'Pedro Sánchez',
+      result: null,
+      status: 'scheduled',
     },
     {
-      id: 2,
-      fecha: '2025-04-15',
-      hora: '12:00',
-      cancha: 'Pista 2',
-      jugador1: 'Juan Pérez & Luis García',
-      jugador2: 'María López & Pedro Sánchez',
-      resultado: '6-4, 6-3',
-      estado: 'completado',
+      id: 'match-2',
+      scheduled: '2025-04-15T12:00:00',
+      round: 'QF',
+      courtId: 'court-2',
+      courtName: 'Pista 2',
+      categoryName: 'Dobles Masculino',
+      team1Id: 'team-3',
+      team1Name: 'Juan Pérez & Luis García',
+      team2Id: 'team-5',
+      team2Name: 'Mario L. & Pedro S.',
+      result: { score: '6-4, 6-3', winner: 1 },
+      status: 'completed',
     },
   ]
 
+  const canchasDisponibles = [
+    { id: 'court-1', name: 'Pista 1 Central', isIndoor: false },
+    { id: 'court-2', name: 'Pista 2', isIndoor: true },
+    { id: 'court-3', name: 'Pista 3', isIndoor: true },
+    { id: 'court-4', name: 'Pista 4', isIndoor: false },
+  ]
+
+  const getRoundLabel = (round: string) => {
+    const labels: Record<string, string> = {
+      Group: 'Grupos',
+      QF: 'Cuartos',
+      SF: 'Semifinal',
+      FINAL: 'Final',
+    }
+    return labels[round] || round
+  }
+
+  const dictionary = {
+    DRAFT: 'Borrador',
+    OPEN: 'Abierto',
+    ONGOING: 'En Curso',
+    FINISHED: 'Finalizado',
+    CANCELED: 'Cancelado',
+  }
+
+  const startDate = tournament?.startDate
+    ? new Date(tournament.startDate).toLocaleDateString()
+    : ''
+
+  const endDate = tournament?.endDate
+    ? new Date(tournament.endDate).toLocaleDateString()
+    : ''
+
+  const teamsPorcentage = tournament?.capacity
+    ? ((teamsInscribed.length / tournament.capacity) * 100).toFixed(0) + '%'
+    : '0%'
+
+  const teamsInscribedPaid = teamsInscribed.filter(
+    (e) => e.status === 'PAID'
+  ).length
+
+  const matchesCompleted = matches.filter(
+    (m) => m.status === 'COMPLETED'
+  ).length
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold">Copa de Primavera 2025</h1>
-            <Badge>En Curso</Badge>
+            <h1 className="text-3xl font-bold">{tournament?.name}</h1>
+            <Badge>{dictionary[tournament?.status || 'DRAFT']}</Badge>
           </div>
           <p className="text-muted-foreground">
-            Tenis • 15-20 Abril 2025 • Club Deportivo Central
+            Padel • {startDate} - {endDate} •{' '}
+            {tournament?.format?.toUpperCase() || 'N/A'}
           </p>
         </div>
-        <Button variant="outline">
+        {/* <Button variant="outline">
           <Settings className="mr-2 h-4 w-4" />
           Configuración
-        </Button>
+        </Button> */}
       </div>
 
       {/* Stats */}
@@ -130,8 +266,10 @@ export default function GestionarTorneoPage({
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">32/64</div>
-            <p className="text-xs text-muted-foreground">50% capacidad</p>
+            <div className="text-2xl font-bold">
+              {teamsInscribed.length}/{tournament?.capacity}
+            </div>
+            <p className="text-xs text-muted-foreground">{teamsPorcentage}</p>
           </CardContent>
         </Card>
 
@@ -141,8 +279,10 @@ export default function GestionarTorneoPage({
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">16</div>
-            <p className="text-xs text-muted-foreground">8 completados</p>
+            <div className="text-2xl font-bold">{matches.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {matchesCompleted} completados
+            </p>
           </CardContent>
         </Card>
 
@@ -152,9 +292,9 @@ export default function GestionarTorneoPage({
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{categories.length}</div>
             <p className="text-xs text-muted-foreground">
-              Individual, Dobles, Mixto
+              {categories.map((cat) => cat.name).join(', ')}
             </p>
           </CardContent>
         </Card>
@@ -165,8 +305,12 @@ export default function GestionarTorneoPage({
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,440€</div>
-            <p className="text-xs text-muted-foreground">32 × 45€</p>
+            <div className="text-2xl font-bold">
+              ${teamsInscribedPaid * (tournament?.registrationFee || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {teamsInscribedPaid} × ${tournament?.registrationFee || 0}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -188,13 +332,10 @@ export default function GestionarTorneoPage({
                 <div>
                   <CardTitle>Calendario de Partidos</CardTitle>
                   <CardDescription>
-                    Programa y gestiona todos los partidos del torneo
+                    Programa partidos entre equipos inscritos
                   </CardDescription>
                 </div>
-                <Dialog
-                  open={dialogoPartidoAbierto}
-                  onOpenChange={setDialogoPartidoAbierto}
-                >
+                <Dialog>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="mr-2 h-4 w-4" />
@@ -205,99 +346,113 @@ export default function GestionarTorneoPage({
                     <DialogHeader>
                       <DialogTitle>Crear Nuevo Partido</DialogTitle>
                       <DialogDescription>
-                        Programa un partido entre los participantes inscritos
+                        Programa un partido entre equipos inscritos
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Categoría *</Label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cat-1">
+                              Individual Masculino
+                            </SelectItem>
+                            <SelectItem value="cat-2">
+                              Individual Femenino
+                            </SelectItem>
+                            <SelectItem value="cat-3">
+                              Dobles Masculino
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Jugador/Pareja 1</Label>
+                          <Label>Equipo 1 *</Label>
                           <Select>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona jugador" />
+                              <SelectValue placeholder="Selecciona equipo" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">
-                                Carlos Rodríguez
-                              </SelectItem>
-                              <SelectItem value="2">Ana Martínez</SelectItem>
-                              <SelectItem value="3">
-                                Juan Pérez & Luis García
-                              </SelectItem>
+                              {equiposInscritos
+                                .filter((e) => e.inscriptionStatus === 'paid')
+                                .map((equipo) => (
+                                  <SelectItem key={equipo.id} value={equipo.id}>
+                                    {equipo.teamName}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Jugador/Pareja 2</Label>
+                          <Label>Equipo 2 *</Label>
                           <Select>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona jugador" />
+                              <SelectValue placeholder="Selecciona equipo" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="2">Ana Martínez</SelectItem>
-                              <SelectItem value="4">María López</SelectItem>
+                              {equiposInscritos
+                                .filter((e) => e.inscriptionStatus === 'paid')
+                                .map((equipo) => (
+                                  <SelectItem key={equipo.id} value={equipo.id}>
+                                    {equipo.teamName}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid gap-4 md:grid-cols-3">
                         <div className="space-y-2">
-                          <Label>Fecha</Label>
+                          <Label>Fecha *</Label>
                           <Input type="date" />
                         </div>
                         <div className="space-y-2">
-                          <Label>Hora</Label>
+                          <Label>Hora *</Label>
                           <Input type="time" />
                         </div>
                         <div className="space-y-2">
-                          <Label>Cancha</Label>
+                          <Label>Cancha *</Label>
                           <Select>
                             <SelectTrigger>
                               <SelectValue placeholder="Selecciona" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">Pista 1</SelectItem>
-                              <SelectItem value="2">Pista 2</SelectItem>
-                              <SelectItem value="3">Pista 3</SelectItem>
+                              {canchasDisponibles.map((cancha) => (
+                                <SelectItem key={cancha.id} value={cancha.id}>
+                                  {cancha.name}{' '}
+                                  {cancha.isIndoor ? '(Indoor)' : '(Outdoor)'}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label>Fase del Torneo</Label>
+                        <Label>Fase del Torneo *</Label>
                         <Select>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona fase" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="32avos">
-                              32avos de Final
+                            <SelectItem value="Group">
+                              Fase de Grupos
                             </SelectItem>
-                            <SelectItem value="16avos">
-                              16avos de Final
-                            </SelectItem>
-                            <SelectItem value="octavos">
-                              Octavos de Final
-                            </SelectItem>
-                            <SelectItem value="cuartos">
-                              Cuartos de Final
-                            </SelectItem>
-                            <SelectItem value="semifinal">Semifinal</SelectItem>
-                            <SelectItem value="final">Final</SelectItem>
+                            <SelectItem value="QF">Cuartos de Final</SelectItem>
+                            <SelectItem value="SF">Semifinal</SelectItem>
+                            <SelectItem value="FINAL">Final</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setDialogoPartidoAbierto(false)}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button onClick={() => setDialogoPartidoAbierto(false)}>
-                        Crear Partido
-                      </Button>
+                      <DialogClose asChild>
+                        <Button variant="outline">Cancelar</Button>
+                      </DialogClose>
+                      <Button>Crear Partido</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -309,7 +464,8 @@ export default function GestionarTorneoPage({
                   <TableRow>
                     <TableHead>Fecha/Hora</TableHead>
                     <TableHead>Cancha</TableHead>
-                    <TableHead>Jugadores</TableHead>
+                    <TableHead>Ronda</TableHead>
+                    <TableHead>Equipos</TableHead>
                     <TableHead>Resultado</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -321,33 +477,59 @@ export default function GestionarTorneoPage({
                       <TableCell>
                         <div className="text-sm">
                           <div className="font-medium">
-                            {new Date(partido.fecha).toLocaleDateString(
+                            {new Date(partido.scheduled).toLocaleDateString(
                               'es-ES'
                             )}
                           </div>
                           <div className="text-muted-foreground">
-                            {partido.hora}
+                            {new Date(partido.scheduled).toLocaleTimeString(
+                              'es-ES',
+                              {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              }
+                            )}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{partido.cancha}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{partido.courtName}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {getRoundLabel(partido.round)}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <div className="space-y-1 text-sm">
-                          <div>{partido.jugador1}</div>
+                          <div>{partido.team1Name}</div>
                           <div className="text-muted-foreground">vs</div>
-                          <div>{partido.jugador2}</div>
+                          <div>{partido.team2Name}</div>
                         </div>
                       </TableCell>
-                      <TableCell>{partido.resultado || '-'}</TableCell>
+                      <TableCell>
+                        {partido.result ? (
+                          <div className="text-sm">
+                            <div className="font-medium">
+                              {partido.result.score}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Ganador: Equipo {partido.result.winner}
+                            </div>
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            partido.estado === 'completado'
+                            partido.status === 'completed'
                               ? 'default'
                               : 'secondary'
                           }
                         >
-                          {partido.estado === 'completado'
+                          {partido.status === 'completed'
                             ? 'Completado'
                             : 'Programado'}
                         </Badge>
@@ -374,40 +556,54 @@ export default function GestionarTorneoPage({
         <TabsContent value="inscritos" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Participantes Inscritos</CardTitle>
+              <CardTitle>Equipos Inscritos</CardTitle>
               <CardDescription>
-                Gestiona las inscripciones y confirmaciones
+                Gestiona las inscripciones de equipos al torneo
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Equipo</TableHead>
+                    <TableHead>Jugadores</TableHead>
                     <TableHead>Categoría</TableHead>
+                    <TableHead>Fecha Inscripción</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inscritos.map((inscrito) => (
-                    <TableRow key={inscrito.id}>
+                  {equiposInscritos.map((equipo) => (
+                    <TableRow key={equipo.id}>
                       <TableCell className="font-medium">
-                        {inscrito.nombre}
+                        {equipo.teamName}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{inscrito.categoria}</Badge>
+                        <div className="text-sm">
+                          {equipo.players.map((player, idx) => (
+                            <div key={idx}>{player.name}</div>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{equipo.categoryName}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(equipo.inscriptionDate).toLocaleDateString(
+                          'es-ES'
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            inscrito.estado === 'confirmado'
+                            equipo.inscriptionStatus === 'paid'
                               ? 'default'
                               : 'secondary'
                           }
                         >
-                          {inscrito.estado === 'confirmado'
-                            ? 'Confirmado'
+                          {equipo.inscriptionStatus === 'paid'
+                            ? 'Pagado'
                             : 'Pendiente'}
                         </Badge>
                       </TableCell>
@@ -416,9 +612,6 @@ export default function GestionarTorneoPage({
                           <Button variant="ghost" size="sm">
                             Ver Detalles
                           </Button>
-                          {inscrito.estado === 'pendiente' && (
-                            <Button size="sm">Aprobar</Button>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -449,39 +642,11 @@ export default function GestionarTorneoPage({
 
         {/* Info Tab */}
         <TabsContent value="info" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Información del Torneo</CardTitle>
-                <Button variant="outline">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label className="text-muted-foreground">Deporte</Label>
-                  <p className="text-lg">Tenis</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Formato</Label>
-                  <p className="text-lg">Eliminación Directa</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Ubicación</Label>
-                  <p className="text-lg">Club Deportivo Central, Madrid</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">
-                    Precio de Inscripción
-                  </Label>
-                  <p className="text-lg">45€</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <InformationForm
+            information={tournament}
+            slug={slug}
+            updateTournament={updateTournament}
+          />
         </TabsContent>
       </Tabs>
     </div>
