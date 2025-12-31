@@ -29,6 +29,7 @@ export default async function DashboardNewTournamentPage() {
     const prize1st = formData.get('prize1st') as string
     const prize2nd = formData.get('prize2nd') as string
     const prize3rd = formData.get('prize3rd') as string
+    const status = (formData.get('status') as 'DRAFT' | 'OPEN') || 'DRAFT'
 
     const slugLink = name
       .toLowerCase()
@@ -54,6 +55,7 @@ export default async function DashboardNewTournamentPage() {
         description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        status,
         capacity,
         registrationFee,
         format,

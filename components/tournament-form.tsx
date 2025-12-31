@@ -90,8 +90,8 @@ export default function CrearTorneoPage({
       formData.set('endDate', fechaFin.toISOString())
     }
 
-    // Agregar el estado (DRAFT o PUBLISHED)
-    formData.set('status', isDraft ? 'DRAFT' : 'PUBLISHED')
+    // Agregar el estado (DRAFT o OPEN)
+    formData.set('status', isDraft ? 'DRAFT' : 'OPEN')
 
     // Agregar las categorías como JSON
     formData.set('categories', JSON.stringify(categorias))
@@ -493,6 +493,25 @@ export default function CrearTorneoPage({
 
         {/* Actions */}
         <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={(e) => {
+              const form = e.currentTarget.closest('form')
+              if (form) {
+                handleSubmit(
+                  {
+                    preventDefault: () => {},
+                    currentTarget: form,
+                  } as React.FormEvent<HTMLFormElement>,
+                  true
+                )
+              }
+            }}
+          >
+            Guardar Borrador
+          </Button>
           <Button type="submit" className="flex-1">
             Publicar Torneo
           </Button>

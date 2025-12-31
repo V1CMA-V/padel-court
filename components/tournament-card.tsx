@@ -10,8 +10,26 @@ import {
   CardTitle,
 } from './ui/card'
 
-export default function TorneoCard({ torneo }: { torneo: any }) {
+type TournamentStatus = 'DRAFT' | 'OPEN' | 'ONGOING' | 'FINISHED' | 'CANCELED'
 
+type Tournament = {
+  id: string
+  name: string
+  startDate: Date
+  endDate: Date
+  status: TournamentStatus
+  capacity: number | null
+}
+
+export default function TorneoCard({
+  torneo,
+  inscriptions = 0,
+  matches = 0,
+}: {
+  torneo: Tournament
+  inscriptions?: number
+  matches?: number
+}) {
   return (
     <Card className="transition-all hover:shadow-md">
       <CardHeader>
@@ -19,27 +37,31 @@ export default function TorneoCard({ torneo }: { torneo: any }) {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-xl">{torneo.name}</CardTitle>
-              <Badge variant="outline">{torneo.sport}</Badge>
+              <Badge variant="outline">Padel</Badge>
             </div>
             <CardDescription>
-              {new Date(torneo.fechaInicio).toLocaleDateString('es-ES')} -{' '}
-              {new Date(torneo.fechaFin).toLocaleDateString('es-ES')}
+              {new Date(torneo.startDate).toLocaleDateString('es-ES')} -{' '}
+              {new Date(torneo.endDate).toLocaleDateString('es-ES')}
             </CardDescription>
           </div>
           <Badge
             variant={
-              torneo.estado === 'activo'
+              torneo.status === 'OPEN' || torneo.status === 'ONGOING'
                 ? 'default'
-                : torneo.estado === 'borrador'
+                : torneo.status === 'DRAFT'
                 ? 'secondary'
                 : 'outline'
             }
           >
-            {torneo.estado === 'activo'
+            {torneo.status === 'OPEN'
+              ? 'Abierto'
+              : torneo.status === 'ONGOING'
               ? 'En Curso'
-              : torneo.estado === 'borrador'
+              : torneo.status === 'DRAFT'
               ? 'Borrador'
-              : 'Finalizado'}
+              : torneo.status === 'FINISHED'
+              ? 'Finalizado'
+              : 'Cancelado'}
           </Badge>
         </div>
       </CardHeader>
@@ -47,11 +69,13 @@ export default function TorneoCard({ torneo }: { torneo: any }) {
         <div className="mb-4 flex gap-6 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            {torneo.inscripciones}/{torneo.capacidad} inscritos
+            {inscriptions ? `${inscriptions}/${torneo.capacity}` : '0 '}
+            inscritos
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {torneo.partidos} partidos
+            {matches ? `${matches}` : '0 '}
+            partidos
           </span>
         </div>
         <div className="flex gap-2">
