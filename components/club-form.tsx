@@ -37,8 +37,9 @@ export function ClubForm({ className, ...props }: React.ComponentProps<'div'>) {
       options: {
         data: {
           name: name,
-          type: 'club',
+          role: 'CLUB',
         },
+        emailRedirectTo: `${process.env.BASE_URL}/dashboard`,
       },
     })
 

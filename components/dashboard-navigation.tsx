@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -11,7 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { TenisBall } from './icons'
 import { ModeToggle } from './mode-toggle'
@@ -19,6 +20,7 @@ import { ModeToggle } from './mode-toggle'
 export function DashboardNavigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const navItems = [
     {
@@ -37,6 +39,19 @@ export function DashboardNavigation() {
       icon: Settings,
     },
   ]
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error('Error signing out:', error.message)
+      return
+    }
+
+    router.push('/login')
+    router.refresh()
+  }
 
   return (
     <>
@@ -75,12 +90,10 @@ export function DashboardNavigation() {
             <Link href="/">Ver Sitio Público</Link>
           </Button>
 
-          <form action="">
-            <Button variant="outline" size="sm">
-              <LogOut className="mr-2 h-4 w-4" />
-              Cerrar Sesión
-            </Button>
-          </form>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Cerrar Sesión
+          </Button>
         </div>
       </div>
 

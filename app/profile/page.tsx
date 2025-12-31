@@ -8,12 +8,16 @@ import { redirect } from 'next/navigation'
 export default async function ProfilePage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getClaims()
 
-  if (!user) {
+  const userId = data?.claims.sub as string
+  const role = data?.claims.user_metadata?.role as 'PLAYER' | 'CLUB' | undefined
+
+  if (!data?.claims.sub) {
     redirect('/login')
+  }
+  if (role !== 'PLAYER') {
+    redirect('/dashboard')
   }
 
   return (
@@ -29,9 +33,9 @@ export default async function ProfilePage() {
           </div>
         </section>
 
-        <UpdateProfileForm userId={user?.id as string} />
+        <UpdateProfileForm userId={userId} />
 
-        <PlayersTeams userId={user?.id as string} />
+        <PlayersTeams userId={userId} />
       </main>
       <Footer />
     </>

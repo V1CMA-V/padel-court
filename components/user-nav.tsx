@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
-import { Home, Settings, Users2 } from 'lucide-react'
+import { Home, LayoutDashboard, Settings, Trophy, Users2 } from 'lucide-react'
 import Link from 'next/link'
 import { SingOutButton } from './submits-buttons'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 
-export const navItems = [
+export const navItemsPlayer = [
   {
     name: 'Torneos',
     href: '/tournaments',
@@ -25,15 +25,56 @@ export const navItems = [
   { name: 'Equipos', href: '/profile/teams', icon: Users2 },
 ]
 
-export default async function UserNav({ id }: { id: string }) {
-  const user = await prisma.player.findUnique({
-    where: { id: id },
-    select: {
-      name: true,
-      email: true,
-      profileImageUrl: true,
-    },
-  })
+const navItemsClub = [
+  {
+    href: '/dashboard',
+    name: 'Dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    href: '/dashboard/tournament',
+    name: 'Mis Torneos',
+    icon: Trophy,
+  },
+  {
+    href: '/dashboard/club',
+    name: 'Perfil del Club',
+    icon: Settings,
+  },
+]
+
+export default async function UserNav({
+  id,
+  role,
+}: {
+  id: string
+  role: 'PLAYER' | 'CLUB' | undefined
+}) {
+  async function getPlayerInfo(userId: string) {
+    if (!userId) return null
+    const user = await prisma.player.findUnique({
+      where: { id: id },
+      select: {
+        name: true,
+        email: true,
+        profileImageUrl: true,
+      },
+    })
+    return user
+  }
+
+  async function getClubInfo(userId: string) {
+    if (!userId) return null
+    const user = await prisma.club.findUnique({
+      where: { id: id },
+      select: {
+        name: true,
+        email: true,
+        logoUrl: true,
+      },
+    })
+    return user
+  }
 
   async function handleSignOut() {
     'use server'
@@ -46,12 +87,20 @@ export default async function UserNav({ id }: { id: string }) {
     }
   }
 
+  const user =
+    role === 'PLAYER' ? await getPlayerInfo(id) : await getClubInfo(id)
+
+  const avatarImage =
+    role === 'PLAYER'
+      ? (user as { profileImageUrl?: string })?.profileImageUrl
+      : (user as { logoUrl?: string })?.logoUrl
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 rounded-full">
-            <AvatarImage src={user?.profileImageUrl || ''} alt="User Avatar" />
+            <AvatarImage src={avatarImage || ''} alt="User Avatar" />
             <AvatarFallback>{user?.name?.slice(0, 2)}</AvatarFallback>
           </Avatar>
         </Button>
@@ -70,19 +119,21 @@ export default async function UserNav({ id }: { id: string }) {
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          {navItems.map((item, index) => (
-            <DropdownMenuItem key={index} asChild>
-              <Link
-                href={item.href}
-                className="w-full flex justify-between items-center"
-              >
-                {item.name}
-                <span>
-                  <item.icon className="w-4 h-4" />
-                </span>
-              </Link>
-            </DropdownMenuItem>
-          ))}
+          {(role === 'PLAYER' ? navItemsPlayer : navItemsClub).map(
+            (item, index) => (
+              <DropdownMenuItem key={index} asChild>
+                <Link
+                  href={item.href}
+                  className="w-full flex justify-between items-center"
+                >
+                  {item.name}
+                  <span>
+                    <item.icon className="w-4 h-4" />
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            )
+          )}
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />

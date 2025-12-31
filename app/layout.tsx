@@ -12,10 +12,24 @@ export const metadata: Metadata = {
   description: 'Inscripcion de torneo de padel',
 }
 
-async function getUserColorScheme(userId: string) {
+async function getPlayerColorScheme(userId: string) {
   if (!userId) return null
 
   const data = await prisma.player.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      colorSchema: true,
+    },
+  })
+
+  return data
+}
+async function getClubColorScheme(userId: string) {
+  if (!userId) return null
+
+  const data = await prisma.club.findUnique({
     where: {
       id: userId,
     },
@@ -35,10 +49,18 @@ export default async function RootLayout({
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
 
-  const user = data?.claims
+  const userID = data?.claims.sub as string
+  const role = data?.claims?.user_metadata?.role as
+    | 'PLAYER'
+    | 'CLUB'
+    | undefined
 
   // Fetch user color scheme preference
-  const colorScheme = await getUserColorScheme(user?.sub as string)
+
+  const colorScheme =
+    role === 'CLUB'
+      ? await getClubColorScheme(userID)
+      : await getPlayerColorScheme(userID)
 
   return (
     <html lang="es" suppressHydrationWarning>

@@ -16,6 +16,10 @@ export default async function Navbar() {
   const { data } = await supabase.auth.getClaims()
 
   const id = data?.claims?.sub as string
+  const role = data?.claims?.user_metadata?.role as
+    | 'PLAYER'
+    | 'CLUB'
+    | undefined
 
   return (
     <header className="max-w-350 mx-auto flex justify-between items-center min-h-[10Vh] px-4 fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-50">
@@ -41,7 +45,7 @@ export default async function Navbar() {
           <ModeToggle />
 
           {data?.claims ? (
-            <UserNav id={id} />
+            <UserNav id={id} role={role} />
           ) : (
             <>
               <Button asChild>

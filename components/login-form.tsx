@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { SignInButton } from './submits-buttons'
 
@@ -23,8 +24,6 @@ export function LoginForm({
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-
-    console.log('data: ', email, password)
 
     const supabase = createClient()
 
@@ -41,7 +40,7 @@ export function LoginForm({
       console.log('Sign-in successful!')
     }
 
-    redirect('/profile')
+    redirect('/')
   }
 
   return (
@@ -49,8 +48,8 @@ export function LoginForm({
       <form action={signIn}>
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
-            <a
-              href="#"
+            <Link
+              href="/"
               className="flex flex-col items-center gap-2 font-medium"
             >
               <div className="flex size-8 items-center justify-center rounded-md">
@@ -59,7 +58,7 @@ export function LoginForm({
               <span className="sr-only">
                 Champ<span className="text-primary">Pádel</span>
               </span>
-            </a>
+            </Link>
             <h1 className="text-xl font-bold">Bienvenido a ChampPádel</h1>
             <FieldDescription>
               ¿No tienes una cuenta? <a href="/sign-up">Regístrate</a>

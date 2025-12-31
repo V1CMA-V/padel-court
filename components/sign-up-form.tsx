@@ -28,8 +28,6 @@ export function SignUpForm({
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
 
-    console.log('data: ', name, lastName, email, password, confirmPassword)
-
     if (password !== confirmPassword)
       throw new Error('Las contraseñas no coinciden.')
 
@@ -43,6 +41,7 @@ export function SignUpForm({
       options: {
         data: {
           name: `${name} ${lastName}`,
+          role: 'PLAYER',
         },
         emailRedirectTo: `${process.env.BASE_URL}/profile`,
       },

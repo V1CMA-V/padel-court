@@ -7,8 +7,12 @@ export default async function LoginPage() {
 
   const { data } = await supabase.auth.getClaims()
 
-  if (data?.claims?.sub) {
+  const role = data?.claims?.user_metadata?.role
+
+  if (role === 'PLAYER') {
     redirect('/profile')
+  } else if (role === 'CLUB') {
+    redirect('/dashboard')
   }
 
   return (
