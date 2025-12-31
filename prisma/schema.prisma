@@ -124,11 +124,20 @@ enum TournamentStatus {
 
 model Tournament {
   id          String   @id @default(uuid())
+  slug        String   @unique
   name        String
   description String?
   startDate   DateTime
   endDate     DateTime
-  status      TournamentStatus
+  status      TournamentStatus @default(DRAFT)
+  capacity    Int?
+  registrationFee Float
+  format      String?
+  rules       String?
+  prize1st    String?
+  prize2nd    String?
+  prize3rd    String?
+
   createdAt   DateTime @default(now())
 
   clubId String
@@ -174,7 +183,13 @@ model Category {
   name        String
   description String?
 
-  tournaments Tournament[]
+  prize1st String?
+  prize2nd String?
+  prize3rd String?
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
   matches     Match[]
   teamEnrollments TeamEnrollment[]
 }
@@ -208,11 +223,12 @@ model Match {
 
   categoryId String
   courtId    String?
+  tournamentId String
 
   category Category @relation(fields: [categoryId], references: [id])
   court    Court?    @relation(fields: [courtId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
 
-  tournaments Tournament[]
   leagues     League[]
   teams  MatchTeam[]
   result MatchResult?

@@ -70,10 +70,6 @@ export default async function PerfilClubPage() {
 
   const { clubData, location } = await getData(clubId as string)
 
-  console.log('Club datos: ', clubData)
-
-  console.log('Location datos: ', location)
-
   const planNames: { [key: string]: string } = {
     free: 'Plan Gratis',
     pro: 'Plan Profesional',

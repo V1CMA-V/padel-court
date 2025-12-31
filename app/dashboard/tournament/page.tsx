@@ -1,18 +1,29 @@
-import { Badge } from '@/components/ui/badge'
+import TorneoCard from '@/components/tournament-card'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import prisma from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
-import { Calendar, Edit, Plus, Search, Trash2, Users } from 'lucide-react'
+import { File, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+
+async function getData(userId: string) {
+  const data = await prisma.tournament.findMany({
+    where: {
+      clubId: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+    },
+  })
+
+  return data
+}
 
 export default async function DashboardTorneosPage() {
   const supabase = await createClient()
@@ -22,6 +33,10 @@ export default async function DashboardTorneosPage() {
   if (!data?.claims?.sub) {
     redirect('/plans')
   }
+
+  const tournaments = await getData(data.claims.sub)
+
+  console.log('Torneos: ', tournaments)
 
   const torneosActivos = [
     {
@@ -76,63 +91,6 @@ export default async function DashboardTorneosPage() {
     },
   ]
 
-  const TorneoCard = ({ torneo }: { torneo: any }) => (
-    <Card className="transition-all hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-xl">{torneo.name}</CardTitle>
-              <Badge variant="outline">{torneo.sport}</Badge>
-            </div>
-            <CardDescription>
-              {new Date(torneo.fechaInicio).toLocaleDateString('es-ES')} -{' '}
-              {new Date(torneo.fechaFin).toLocaleDateString('es-ES')}
-            </CardDescription>
-          </div>
-          <Badge
-            variant={
-              torneo.estado === 'activo'
-                ? 'default'
-                : torneo.estado === 'borrador'
-                ? 'secondary'
-                : 'outline'
-            }
-          >
-            {torneo.estado === 'activo'
-              ? 'En Curso'
-              : torneo.estado === 'borrador'
-              ? 'Borrador'
-              : 'Finalizado'}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex gap-6 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            {torneo.inscripciones}/{torneo.capacidad} inscritos
-          </span>
-          <span className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            {torneo.partidos} partidos
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" asChild>
-            <Link href={`/dashboard/tournament/${torneo.id}`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Gestionar
-            </Link>
-          </Button>
-          <Button variant="outline" size="icon">
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -143,7 +101,7 @@ export default async function DashboardTorneosPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/tournament/crear">
+          <Link href="/dashboard/tournament/new">
             <Plus className="mr-2 h-4 w-4" />
             Crear Torneo
           </Link>
@@ -171,27 +129,75 @@ export default async function DashboardTorneosPage() {
         </TabsList>
 
         <TabsContent value="activos" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {torneosActivos.map((torneo) => (
-              <TorneoCard key={torneo.id} torneo={torneo} />
-            ))}
-          </div>
+          {tournaments.length === 0 ? (
+            <div className="flex min-h-100 flex-col items-center justify-center rounded-md border border-dashed p-8 text-center animate-in fade-in-50">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <File className="w-10 h-10 text-primary" />
+              </div>
+
+              <h2 className="mt-6 text-xl font-semibold">
+                No tienes torneos activos
+              </h2>
+              <p className="mb-8 mt-2 text-center text-sm leading-6 text-muted-foreground max-w-sm mx-auto">
+                Actualmente no tienes torneos activos. Por favor, crea algunos
+                para que puedas verlos aquí.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {torneosActivos.map((torneo) => (
+                <TorneoCard key={torneo.id} torneo={torneo} />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="borradores" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {torneosBorrador.map((torneo) => (
-              <TorneoCard key={torneo.id} torneo={torneo} />
-            ))}
-          </div>
+          {tournaments.length === 0 ? (
+            <div className="flex min-h-100 flex-col items-center justify-center rounded-md border border-dashed p-8 text-center animate-in fade-in-50">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <File className="w-10 h-10 text-primary" />
+              </div>
+
+              <h2 className="mt-6 text-xl font-semibold">
+                No tienes torneos activos
+              </h2>
+              <p className="mb-8 mt-2 text-center text-sm leading-6 text-muted-foreground max-w-sm mx-auto">
+                Actualmente no tienes torneos activos. Por favor, crea algunos
+                para que puedas verlos aquí.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {torneosBorrador.map((torneo) => (
+                <TorneoCard key={torneo.id} torneo={torneo} />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="pasados" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {torneosPasados.map((torneo) => (
-              <TorneoCard key={torneo.id} torneo={torneo} />
-            ))}
-          </div>
+          {tournaments.length === 0 ? (
+            <div className="flex min-h-100 flex-col items-center justify-center rounded-md border border-dashed p-8 text-center animate-in fade-in-50">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <File className="w-10 h-10 text-primary" />
+              </div>
+
+              <h2 className="mt-6 text-xl font-semibold">
+                No tienes torneos activos
+              </h2>
+              <p className="mb-8 mt-2 text-center text-sm leading-6 text-muted-foreground max-w-sm mx-auto">
+                Actualmente no tienes torneos activos. Por favor, crea algunos
+                para que puedas verlos aquí.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {torneosPasados.map((torneo) => (
+                <TorneoCard key={torneo.id} torneo={torneo} />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
