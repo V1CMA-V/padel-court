@@ -1,4 +1,7 @@
 import { updateTournament } from '@/app/actions/tournament-actions'
+import AddCategory from '@/components/dashboard/add-category'
+import DelCategory from '@/components/dashboard/del-category'
+import TournamentInscriptionTab from '@/components/dashboard/tournament-inscrition-tab'
 import InformationForm from '@/components/information-form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,6 +50,7 @@ async function getData(tournamentSlug: string) {
     select: {
       id: true,
       name: true,
+      slug: true,
       startDate: true,
       endDate: true,
       status: true,
@@ -66,6 +70,7 @@ async function getData(tournamentSlug: string) {
       tournamentId: tournament?.id,
     },
     select: {
+      id: true,
       createdAt: true,
 
       category: {
@@ -74,7 +79,12 @@ async function getData(tournamentSlug: string) {
         },
       },
 
-      teamId: true,
+      team: {
+        select: {
+          ownerName: true,
+          teammateName: true,
+        },
+      },
       status: true,
     },
   })
@@ -107,7 +117,12 @@ async function getData(tournamentSlug: string) {
       tournamentId: tournament?.id,
     },
     select: {
+      id: true,
       name: true,
+      description: true,
+      prize1st: true,
+      prize2nd: true,
+      prize3rd: true,
     },
   })
 
@@ -124,11 +139,6 @@ export default async function GestionarTorneoPage({
   const { tournament, teamsInscribed, matches, categories } = await getData(
     slug
   )
-
-  console.log('Tournament: ', tournament)
-  console.log('Teams Inscribed: ', teamsInscribed)
-  console.log('Matches: ', matches)
-  console.log('Categories: ', categories)
 
   // TODO: Replace with real data from DB
 
@@ -193,6 +203,36 @@ export default async function GestionarTorneoPage({
       team2Name: 'Mario L. & Pedro S.',
       result: { score: '6-4, 6-3', winner: 1 },
       status: 'completed',
+    },
+  ]
+
+  const categorias = [
+    {
+      id: 'cat-1',
+      name: 'Individual Masculino',
+      description: 'Competencia individual masculina',
+      price: 45,
+      maxInscriptions: 32,
+      currentInscriptions: 16,
+      tournamentId: slug,
+    },
+    {
+      id: 'cat-2',
+      name: 'Individual Femenino',
+      description: 'Competencia individual femenina',
+      price: 45,
+      maxInscriptions: 32,
+      currentInscriptions: 10,
+      tournamentId: slug,
+    },
+    {
+      id: 'cat-3',
+      name: 'Dobles Masculino',
+      description: 'Competencia de dobles masculina',
+      price: 60,
+      maxInscriptions: 16,
+      currentInscriptions: 6,
+      tournamentId: slug,
     },
   ]
 
@@ -321,6 +361,7 @@ export default async function GestionarTorneoPage({
       <Tabs defaultValue="partidos" className="space-y-4">
         <TabsList>
           <TabsTrigger value="partidos">Partidos</TabsTrigger>
+          <TabsTrigger value="categorias">Categorías</TabsTrigger>
           <TabsTrigger value="inscritos">Inscritos</TabsTrigger>
           <TabsTrigger value="clasificacion">Clasificación</TabsTrigger>
           <TabsTrigger value="info">Información</TabsTrigger>
@@ -556,70 +597,63 @@ export default async function GestionarTorneoPage({
 
         {/* Inscritos Tab */}
         <TabsContent value="inscritos" className="space-y-4">
+          <TournamentInscriptionTab
+            categories={categories}
+            teamsInscribed={teamsInscribed}
+            tournament={
+              tournament ? { id: tournament.id, slug: tournament.slug } : null
+            }
+          />
+        </TabsContent>
+
+        {/* Categorías Tab */}
+        <TabsContent value="categorias" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Equipos Inscritos</CardTitle>
-              <CardDescription>
-                Gestiona las inscripciones de equipos al torneo
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Gestionar Categorías</CardTitle>
+                  <CardDescription>
+                    Configura las categorías del torneo y gestiona inscripciones
+                  </CardDescription>
+                </div>
+
+                {/* Addd category  */}
+                <AddCategory
+                  tournamentId={tournament ? tournament.id : ''}
+                  slug={slug}
+                />
+              </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Equipo</TableHead>
-                    <TableHead>Jugadores</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Fecha Inscripción</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {equiposInscritos.map((equipo) => (
-                    <TableRow key={equipo.id}>
-                      <TableCell className="font-medium">
-                        {equipo.teamName}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {equipo.players.map((player, idx) => (
-                            <div key={idx}>{player.name}</div>
-                          ))}
+              <div className="space-y-6">
+                {categories.map((category) => (
+                  <Card key={category.id}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg">
+                            {category.name}
+                          </CardTitle>
+
+                          {category.description && (
+                            <CardDescription>
+                              {category.description}
+                            </CardDescription>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{equipo.categoryName}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {new Date(equipo.inscriptionDate).toLocaleDateString(
-                          'es-ES'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            equipo.inscriptionStatus === 'paid'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {equipo.inscriptionStatus === 'paid'
-                            ? 'Pagado'
-                            : 'Pendiente'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            Ver Detalles
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
                           </Button>
+                          <DelCategory categoryId={category.id} />
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,4 +1,4 @@
-import TournamentsList from '@/components/tournaments-list'
+import TournamentsList from '@/components/dashboard/tournaments-list'
 import { Button } from '@/components/ui/button'
 import prisma from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
@@ -19,13 +19,25 @@ async function getData(userId: string) {
       status: true,
       capacity: true,
       slug: true,
+      _count: {
+        select: {
+          enrollments: true,
+          matches: true,
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',
     },
   })
 
-  return data
+  // Transform data to include counts
+  return data.map((tournament) => ({
+    ...tournament,
+    inscriptionsCount: tournament._count.enrollments,
+    matchesCount: tournament._count.matches,
+    _count: undefined,
+  }))
 }
 
 export default async function DashboardTorneosPage() {

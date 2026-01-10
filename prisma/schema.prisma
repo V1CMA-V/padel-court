@@ -20,8 +20,8 @@ model Player {
   colorSchema     String?  @default("theme-orange")
   createdAt       DateTime @default(now())
 
-  teams           Team[]
-  TeamMembers     TeamMember[]
+  ownedTeams      Team[]   @relation("TeamOwner")
+  teammateTeams   Team[]   @relation("TeamMate")
 }
 
 model Team {
@@ -29,10 +29,15 @@ model Team {
   status    String?    @default("ACTIVE")
   createdAt DateTime   @default(now())
 
-  createdById String
-  createdBy   Player   @relation(fields: [createdById], references: [id])
+  ownerName      String?
+  ownerId   String?
+  owner     Player?     @relation("TeamOwner", fields: [ownerId], references: [id])
 
-  members      TeamMember[]
+  teammateName String?
+  teammateId   String?
+  teammate     Player?   @relation("TeamMate", fields: [teammateId], references: [id])
+
+
   enrollments  TeamEnrollment[]
   matchTeams   MatchTeam[]
   LeagueTeamStats LeagueTeamStats[]
@@ -42,25 +47,6 @@ enum TeamMemberRole {
   OWNER
   MEMBER
 }
-
-
-model TeamMember {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-
-  teamId   String
-  playerId String?
-
-  guestName String?
-  role      TeamMemberRole
-
-  team   Team   @relation(fields: [teamId], references: [id])
-  player Player? @relation(fields: [playerId], references: [id])
-
-  @@unique([teamId, playerId])
-}
-
-
 
 model Club {
   id          String   @id @unique
@@ -143,9 +129,11 @@ model Tournament {
   clubId String
   club   Club   @relation(fields: [clubId], references: [id])
 
+
   categories Category[]
   matches    Match[]
   enrollments TeamEnrollment[]
+  scheduled  Scheduled[]
 }
 
 model League {
@@ -208,7 +196,9 @@ model TeamEnrollment {
   tournamentId String
   categoryId   String
 
-  status      EnrollmentStatus @default(PENDING)
+  withMatch    Boolean @default(false)
+
+  status       EnrollmentStatus @default(PENDING)
 
   createdAt    DateTime @default(now())
 
@@ -275,4 +265,16 @@ model MatchResult {
 
   matchId String @unique
   match   Match  @relation(fields: [matchId], references: [id])
+}
+
+model Scheduled {
+  id        String   @id @default(uuid())
+  date      DateTime
+  event     String
+  time      String
+  createdAt DateTime @default(now())
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
 }

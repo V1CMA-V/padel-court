@@ -3,8 +3,8 @@
 import { File, Search } from 'lucide-react'
 import { useState } from 'react'
 import TorneoCard from './tournament-card'
-import { Input } from './ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { Input } from '../ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 type Tournament = {
   id: string
@@ -93,12 +93,7 @@ export default function TournamentsList({ tournaments }: TournamentsListProps) {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {torneosOpen.concat(torneosOngoing).map((torneo) => (
-                <TorneoCard
-                  key={torneo.id}
-                  torneo={torneo}
-                  inscriptions={0}
-                  matches={0}
-                />
+                <TorneoCard key={torneo.id} torneo={torneo} />
               ))}
             </div>
           )}

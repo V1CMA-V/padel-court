@@ -1,16 +1,16 @@
 import { deleteTournament } from '@/app/actions/tournament-actions'
 import { Calendar, Edit, Trash2, Users } from 'lucide-react'
 import Link from 'next/link'
-import { Badge } from './ui/badge'
-import { Button } from './ui/button'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from './ui/card'
-import { Input } from './ui/input'
+} from '../ui/card'
+import { Input } from '../ui/input'
 
 type TournamentStatus = 'DRAFT' | 'OPEN' | 'ONGOING' | 'FINISHED' | 'CANCELED'
 
@@ -22,17 +22,14 @@ type Tournament = {
   status: TournamentStatus
   capacity: number | null
   slug: string
+  inscriptionsCount?: number
+  matchesCount?: number
 }
 
-export default function TorneoCard({
-  torneo,
-  inscriptions = 0,
-  matches = 0,
-}: {
-  torneo: Tournament
-  inscriptions?: number
-  matches?: number
-}) {
+export default function TorneoCard({ torneo }: { torneo: Tournament }) {
+  const inscriptionsCount = torneo.inscriptionsCount ?? 0
+  const matchesCount = torneo.matchesCount ?? 0
+
   return (
     <Card className="transition-all hover:shadow-md">
       <CardHeader>
@@ -72,13 +69,14 @@ export default function TorneoCard({
         <div className="mb-4 flex gap-6 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            {inscriptions ? `${inscriptions}/${torneo.capacity}` : '0 '}
+            {torneo.capacity
+              ? `${inscriptionsCount}/${torneo.capacity}`
+              : inscriptionsCount}{' '}
             inscritos
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {matches ? `${matches}` : '0 '}
-            partidos
+            {matchesCount} partidos
           </span>
         </div>
         <div className="flex gap-2">
