@@ -61,3 +61,28 @@ export async function updateTournament(formData: FormData) {
 
   revalidatePath(`/dashboard/tournament/${slug}`)
 }
+
+export async function updateCategory(formData: FormData) {
+  const categoryId = formData.get('categoryId') as string
+  const name = formData.get('name') as string
+  const description = (formData.get('description') as string) || null
+  const prize1st = (formData.get('prize1st') as string) || null
+  const prize2nd = (formData.get('prize2nd') as string) || null
+  const prize3rd = (formData.get('prize3rd') as string) || null
+  const slug = formData.get('slug') as string
+
+  await prisma.category.update({
+    where: {
+      id: categoryId,
+    },
+    data: {
+      name,
+      description,
+      prize1st,
+      prize2nd,
+      prize3rd,
+    },
+  })
+
+  revalidatePath(`/dashboard/tournament/${slug}`)
+}

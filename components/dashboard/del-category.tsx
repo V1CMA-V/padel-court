@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma'
+import { Trash2 } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 import { Button } from '../ui/button'
-import { Trash2 } from 'lucide-react'
 
 export default async function DelCategory({
   categoryId,

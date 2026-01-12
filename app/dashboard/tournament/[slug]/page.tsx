@@ -1,6 +1,10 @@
-import { updateTournament } from '@/app/actions/tournament-actions'
+import {
+  updateCategory,
+  updateTournament,
+} from '@/app/actions/tournament-actions'
 import AddCategory from '@/components/dashboard/add-category'
 import DelCategory from '@/components/dashboard/del-category'
+import EditCategory from '@/components/dashboard/edit-category'
 import TournamentInscriptionTab from '@/components/dashboard/tournament-inscrition-tab'
 import InformationForm from '@/components/information-form'
 import { Badge } from '@/components/ui/badge'
@@ -203,36 +207,6 @@ export default async function GestionarTorneoPage({
       team2Name: 'Mario L. & Pedro S.',
       result: { score: '6-4, 6-3', winner: 1 },
       status: 'completed',
-    },
-  ]
-
-  const categorias = [
-    {
-      id: 'cat-1',
-      name: 'Individual Masculino',
-      description: 'Competencia individual masculina',
-      price: 45,
-      maxInscriptions: 32,
-      currentInscriptions: 16,
-      tournamentId: slug,
-    },
-    {
-      id: 'cat-2',
-      name: 'Individual Femenino',
-      description: 'Competencia individual femenina',
-      price: 45,
-      maxInscriptions: 32,
-      currentInscriptions: 10,
-      tournamentId: slug,
-    },
-    {
-      id: 'cat-3',
-      name: 'Dobles Masculino',
-      description: 'Competencia de dobles masculina',
-      price: 60,
-      maxInscriptions: 16,
-      currentInscriptions: 6,
-      tournamentId: slug,
     },
   ]
 
@@ -595,17 +569,6 @@ export default async function GestionarTorneoPage({
           </Card>
         </TabsContent>
 
-        {/* Inscritos Tab */}
-        <TabsContent value="inscritos" className="space-y-4">
-          <TournamentInscriptionTab
-            categories={categories}
-            teamsInscribed={teamsInscribed}
-            tournament={
-              tournament ? { id: tournament.id, slug: tournament.slug } : null
-            }
-          />
-        </TabsContent>
-
         {/* Categorías Tab */}
         <TabsContent value="categorias" className="space-y-4">
           <Card>
@@ -636,17 +599,30 @@ export default async function GestionarTorneoPage({
                             {category.name}
                           </CardTitle>
 
-                          {category.description && (
-                            <CardDescription>
-                              {category.description}
-                            </CardDescription>
-                          )}
+                          <CardDescription>
+                            {category.description && (
+                              <p>{category.description}</p>
+                            )}
+
+                            <div className="mt-2 text-sm flex gap-4">
+                              {category.prize1st && (
+                                <p>1er Lugar: {category.prize1st}</p>
+                              )}
+                              {category.prize2nd && (
+                                <p>2do Lugar: {category.prize2nd}</p>
+                              )}
+                              {category.prize3rd && (
+                                <p>3er Lugar: {category.prize3rd}</p>
+                              )}
+                            </div>
+                          </CardDescription>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </Button>
+                          <EditCategory
+                            category={category}
+                            slug={slug}
+                            updateCategory={updateCategory}
+                          />
                           <DelCategory categoryId={category.id} />
                         </div>
                       </div>
@@ -656,6 +632,17 @@ export default async function GestionarTorneoPage({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Inscritos Tab */}
+        <TabsContent value="inscritos" className="space-y-4">
+          <TournamentInscriptionTab
+            categories={categories}
+            teamsInscribed={teamsInscribed}
+            tournament={
+              tournament ? { id: tournament.id, slug: tournament.slug } : null
+            }
+          />
         </TabsContent>
 
         {/* Clasificación Tab */}
