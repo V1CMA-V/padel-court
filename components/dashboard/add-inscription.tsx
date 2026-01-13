@@ -33,8 +33,6 @@ export function AddInscription({
     slug: string
   }
 }) {
-  console.log('Categoria: ', categories)
-
   async function handleSubmit(formData: FormData) {
     'use server'
     const ownerName = formData.get('ownerName') as string
@@ -54,7 +52,7 @@ export function AddInscription({
       data: {
         teamId: team.id,
         categoryId,
-        status: 'APPROVED',
+        status: 'PAID',
         tournamentId: tournament.id,
       },
     })
@@ -88,7 +86,7 @@ export function AddInscription({
             <Input
               id="ownerName"
               name="ownerName"
-              placeholder="Nombre Apellido"
+              placeholder="Nombre Jugador 1"
             />
           </div>
           <div className="space-y-2 w-full">
@@ -98,7 +96,7 @@ export function AddInscription({
             <Input
               id="teammateName"
               name="teammateName"
-              placeholder="Nombre Apellido"
+              placeholder="Nombre Jugador 2"
             />
           </div>
 
@@ -124,7 +122,7 @@ export function AddInscription({
         </form>
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>
-            <Button type="button" variant="secondary">
+            <Button type="button" className="w-full" variant="secondary">
               Close
             </Button>
           </DialogClose>

@@ -200,6 +200,8 @@ model CategoryGroup {
   id         String @id @default(uuid())
   name       String   // "A", "B", "C"
   categoryId String
+  teamCount  Int?    // Cantidad de equipos asignados al grupo
+
 
   category Category @relation(fields: [categoryId], references: [id])
   teams     GroupTeam[]
