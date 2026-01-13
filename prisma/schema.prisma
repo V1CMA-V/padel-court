@@ -41,6 +41,7 @@ model Team {
   enrollments  TeamEnrollment[]
   matchTeams   MatchTeam[]
   LeagueTeamStats LeagueTeamStats[]
+  groups      GroupTeam[]
 }
 
 enum TeamMemberRole {
@@ -180,7 +181,33 @@ model Category {
 
   matches     Match[]
   teamEnrollments TeamEnrollment[]
+  groups      CategoryGroup[]
 }
+
+model GroupTeam {
+  id      String @id @default(uuid())
+  groupId String
+  teamId  String
+
+  group CategoryGroup @relation(fields: [groupId], references: [id])
+  team  Team          @relation(fields: [teamId], references: [id])
+
+  @@unique([groupId, teamId])
+}
+
+
+model CategoryGroup {
+  id         String @id @default(uuid())
+  name       String   // "A", "B", "C"
+  categoryId String
+
+  category Category @relation(fields: [categoryId], references: [id])
+  teams     GroupTeam[]
+  matches   Match[]
+
+  @@unique([categoryId, name])
+}
+
 
 enum EnrollmentStatus {
   PENDING
@@ -230,10 +257,12 @@ model Match {
   status    MatchStatus @default(SCHEDULED)
   createdAt DateTime  @default(now())
 
+  groupId   String?   // SOLO si round = GROUP
   categoryId String
   courtId    String?
   tournamentId String
 
+  group     CategoryGroup? @relation(fields: [groupId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
   court    Court?    @relation(fields: [courtId], references: [id])
   tournament Tournament @relation(fields: [tournamentId], references: [id])
